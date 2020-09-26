@@ -1,6 +1,6 @@
 {
   "name": "@superwallaby/form-saver",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "form data save and load through localstorage",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
