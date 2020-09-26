@@ -1,19 +1,19 @@
 import { Serial, serializeArray } from './lib/serial';
-import LocalManager from 'local-storage-manager';
+import { LocalManager } from '@superwallaby/local-storage-manager';
 
-export interface FormSaverConfig<K extends string> {
+export interface FormSaverConfig<Keys extends string> {
   formId: string;
-  defaultKey: K;
+  defaultKey: Keys;
   onSave?: () => void;
   onLoad?: () => void;
   onCover?: () => boolean;
   onError?: (e: any) => void;
 }
 
-export class FormSaver<K extends string> {
+export class FormSaver<Keys extends string> {
   form: HTMLElement;
-  saveKey: K;
-  localManager: LocalManager<K>;
+  saveKey: Keys;
+  localManager: LocalManager<Keys>;
 
   public onLoad = () => {};
   public onSave = () => {
@@ -29,8 +29,12 @@ export class FormSaver<K extends string> {
     return;
   };
 
-  constructor(config: FormSaverConfig<K>) {
-    this.localManager = new LocalManager<K>();
+  constructor(config: FormSaverConfig<Keys>) {
+    console.log('LocalManager');
+    console.log(LocalManager);
+    this.localManager = new LocalManager<Keys>({
+      storage: 'localStorage',
+    });
     this.form = document.getElementById(config.formId);
     this.saveKey = config.defaultKey;
     if (config.onSave) this.onSave = config.onSave;
@@ -39,9 +43,9 @@ export class FormSaver<K extends string> {
     if (config.onError) this.onError = config.onError;
   }
 
-  public save = (data: Serial[]) => {
+  public save = (data: Serial[], key?: Keys) => {
     try {
-      this.localManager.saveLocal(this.saveKey, data);
+      this.localManager.saveLocal(key || this.saveKey, data);
       this.onSave();
     } catch (e) {
       console.error(e);
@@ -49,14 +53,14 @@ export class FormSaver<K extends string> {
     }
   };
 
-  public saveData = async (key?: string) => {
+  public saveData = async (key?: Keys) => {
     var data = serializeArray(this.form);
     try {
       if (localStorage.getItem(key || this.saveKey)) {
         if (this.onCover()) {
-          this.save(data);
+          this.save(data, key);
         }
-      } else this.save(data);
+      } else this.save(data, key);
     } catch (e) {
       alert("Can't save Data :(");
       throw Error(e);
@@ -69,6 +73,7 @@ export class FormSaver<K extends string> {
     const target = document.getElementsByName(name)[0];
     const isCheckBox = target.getAttribute('type') === 'checkbox';
     const isSelectBox = target.tagName === 'SELECT';
+    const isTextArea = target.tagName === 'TEXTAREA';
 
     if (isSelectBox) {
       const selectBox = target as HTMLSelectElement;
@@ -76,15 +81,18 @@ export class FormSaver<K extends string> {
         const target = selectBox.options[i];
         if (target.value === value) target.selected = true;
       }
-    }
-
-    if (isCheckBox) {
+    } else if (isCheckBox) {
       // @ts-ignore
       target.checked = true;
-    } else document.getElementsByName(name)[0].setAttribute('value', value);
+    } else if (isTextArea) {
+      if (target.innerHTML) target.innerHTML = value;
+      else if (target.innerText) target.innerText = value;
+      // @ts-ignore
+      target.value = value;
+    } else target.setAttribute('value', value);
   };
 
-  public loadData = (key?: string) => {
+  public loadData = (key?: Keys) => {
     try {
       const data = this.localManager.getLocalObj(key || this.saveKey, null);
       data.forEach(this.set);
@@ -97,3 +105,5 @@ export class FormSaver<K extends string> {
 
 // @ts-ignore
 window.FormSaver = FormSaver;
+
+export default FormSaver;

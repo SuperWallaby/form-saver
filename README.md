@@ -3,7 +3,7 @@
 form data save and load through localStorage
 
 - Typescript support
-- small dependencies
+- Small dependencies
 
 ## Usage
 
@@ -54,3 +54,7 @@ will save data in localStorage
 ### loadData `(key?:string) => void`
 
 will load data from localStorage and give values in form
+
+## AMD
+
+`<script src="https://superwallaby-public-libs.s3.ap-northeast-2.amazonaws.com/form-saver/latest/index.js"></script>`
